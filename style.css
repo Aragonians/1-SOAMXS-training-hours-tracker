@@ -142,7 +142,7 @@ button:hover {
     margin: 10px auto;
 }
 /* ... (All your existing CSS from previous versions goes here) ... */
-
+}
 /* New Logo Styling */
 .app-logo {
     max-width: 100px; /* Adjust as needed */
@@ -150,5 +150,6 @@ button:hover {
     display: block; /* Makes it take up its own line */
     margin: 0 auto 10px auto; /* Centers the logo and adds space below */
 }
+
 
 
