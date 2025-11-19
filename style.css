@@ -1,5 +1,3 @@
-/* ... (Keep existing styles from previous version) ... */
-
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f7f6;
@@ -14,6 +12,14 @@ header {
     padding: 20px 0;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* New Logo Styling */
+.app-logo {
+    max-width: 100px; /* Adjust as needed */
+    height: auto;
+    display: block; /* Makes it take up its own line */
+    margin: 0 auto 10px auto; /* Centers the logo and adds space below */
 }
 
 main {
@@ -99,7 +105,7 @@ button:hover {
     padding: 10px;
     border-bottom: 1px dashed #ddd;
     display: flex;
-    flex-direction: column; /* Changed to column for better display of name */
+    flex-direction: column; 
     align-items: flex-start;
     font-size: 0.9em;
 }
@@ -135,21 +141,9 @@ button:hover {
     display: none;
 }
 
-/* New Chart Styling */
+/* Chart Styling */
 .chart-container {
     width: 100%;
-    max-width: 400px; /* Keep chart size reasonable */
+    max-width: 400px; 
     margin: 10px auto;
 }
-/* ... (All your existing CSS from previous versions goes here) ... */
-}
-/* New Logo Styling */
-.app-logo {
-    max-width: 100px; /* Adjust as needed */
-    height: auto;
-    display: block; /* Makes it take up its own line */
-    margin: 0 auto 10px auto; /* Centers the logo and adds space below */
-}
-
-
-
