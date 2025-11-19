@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructor Hours Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>⏰ Instructor Hours Tracker</h1>
+    </header>
+
+    <main>
+        <section id="tracker-form">
+            <h2>Log New Session</h2>
+            
+            <input type="text" id="instructor-name" placeholder="Instructor Name (e.g., John Doe)" required>
+            <input type="date" id="session-date" required>
+
+            <select id="session-type" required>
+                <option value="" disabled selected>Select Hour Type</option>
+                <option value="instructional">Instructional Hours</option>
+                <option value="non-instructional">Non-Instructional Hours</option>
+            </select>
+            
+            <div class="time-inputs">
+                <label for="start-time">Start Time:</label>
+                <input type="time" id="start-time" required>
+                
+                <label for="end-time">End Time:</label>
+                <input type="time" id="end-time" required>
+            </div>
+
+            <button onclick="logSession()">Add Session</button>
+            <p id="error-message" class="hidden"></p>
+        </section>
+
+        <section id="summary">
+            <h2>Total Hours Summary</h2>
+            <div class="summary-box">
+                <p>Total Instructional:</p>
+                <p id="total-instructional">0.00 hours</p>
+            </div>
+            <div class="summary-box">
+                <p>Total Non-Instructional:</p>
+                <p id="total-non-instructional">0.00 hours</p>
+            </div>
+        </section>
+
+        <section id="chart-section">
+            <h2>Hours Distribution Chart</h2>
+            <div class="chart-container">
+                <canvas id="hoursChart" width="400" height="200"></canvas>
+            </div>
+        </section>
+
+        <section id="session-log">
+            <h2>Session Log</h2>
+            <ul id="log-list">
+                </ul>
+            <button onclick="clearAllData()">Clear All Data</button>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
