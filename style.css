@@ -141,4 +141,14 @@ button:hover {
     max-width: 400px; /* Keep chart size reasonable */
     margin: 10px auto;
 }
+/* ... (All your existing CSS from previous versions goes here) ... */
+
+/* New Logo Styling */
+.app-logo {
+    max-width: 100px; /* Adjust as needed */
+    height: auto;
+    display: block; /* Makes it take up its own line */
+    margin: 0 auto 10px auto; /* Centers the logo and adds space below */
+}
+
 
