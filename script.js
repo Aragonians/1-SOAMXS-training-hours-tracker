@@ -1,5 +1,5 @@
 // Key for storing data in the browser's local storage
-const STORAGE_KEY = 'instructorHoursLogV2'; 
+const STORAGE_KEY = 'instructorHoursLogV3'; // Changed key to prevent conflict with old data
 let myChart = null; // Variable to hold the Chart.js instance
 
 // Load data and draw chart on page load
@@ -12,15 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // Function to log a new session
 function logSession() {
     const nameInput = document.getElementById('instructor-name');
+    const classInput = document.getElementById('class-taught'); // New Input
     const dateInput = document.getElementById('session-date');
     const typeInput = document.getElementById('session-type');
     const startInput = document.getElementById('start-time');
     const endInput = document.getElementById('end-time');
     const errorDisplay = document.getElementById('error-message');
 
-    // Basic validation
-    if (!nameInput.value.trim() || !dateInput.value || !typeInput.value || !startInput.value || !endInput.value) {
-        errorDisplay.textContent = 'Please fill out all fields.';
+    // Basic validation (now checking two select inputs)
+    if (!nameInput.value || !classInput.value || !dateInput.value || !typeInput.value || !startInput.value || !endInput.value) {
+        errorDisplay.textContent = 'Please select a value for all fields.';
         errorDisplay.classList.remove('hidden');
         return;
     }
@@ -38,13 +39,13 @@ function logSession() {
     // Clear error message if validation passes
     errorDisplay.classList.add('hidden');
 
-    // Calculate duration in milliseconds
+    // Calculate duration in milliseconds and convert to hours
     const durationMs = end - start;
-    // Convert to hours (1000ms * 60s * 60min)
     const durationHours = durationMs / (1000 * 60 * 60);
 
     const session = {
-        name: nameInput.value.trim(), // New field
+        name: nameInput.value,
+        class: classInput.value, // New data point
         date: dateInput.value,
         type: typeInput.value,
         start: startInput.value,
@@ -55,9 +56,11 @@ function logSession() {
     saveSession(session);
     loadSessions(); 
     updateSummary(); 
-    renderChart(); // Update the chart after logging
+    renderChart();
     
-    // Clear form inputs except name for easy logging of multiple sessions by one person
+    // Clear form inputs
+    // NOTE: We clear the inputs, but keep the instructor/class selected for quick re-entry of consecutive sessions.
+    // To force re-selection: nameInput.value = ''; classInput.value = '';
     dateInput.value = '';
     typeInput.value = '';
     startInput.value = '';
@@ -75,16 +78,21 @@ function saveSession(session) {
 function loadSessions() {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const logList = document.getElementById('log-list');
-    logList.innerHTML = ''; // Clear existing list
+    logList.innerHTML = ''; 
 
-    sessions.reverse().forEach((session, index) => { // Reverse to show latest first
+    sessions.reverse().forEach((session, index) => {
         const listItem = document.createElement('li');
         const durationFormatted = session.duration.toFixed(2);
         
         const typeDisplay = session.type === 'instructional' ? 'Instructional' : 'Non-Instructional';
         
         listItem.innerHTML = `
-            <p><strong>Instructor: ${session.name}</strong></p>
+            <p>
+                <strong>${session.name}</strong> taught 
+                <span style="background-color: #ffe0b2; padding: 2px 5px; border-radius: 3px;">
+                    ${session.class} 
+                </span>
+            </p>
             <p>
                 ${new Date(session.date).toLocaleDateString()} | 
                 ${session.start} - ${session.end} 
@@ -115,7 +123,6 @@ function updateSummary() {
     document.getElementById('total-instructional').textContent = totalInstructional.toFixed(2) + ' hours';
     document.getElementById('total-non-instructional').textContent = totalNonInstructional.toFixed(2) + ' hours';
     
-    // Return totals for use in rendering the chart
     return { instructional: totalInstructional, nonInstructional: totalNonInstructional };
 }
 
@@ -124,7 +131,6 @@ function renderChart() {
     const totals = updateSummary();
     const ctx = document.getElementById('hoursChart').getContext('2d');
 
-    // Destroy existing chart if it exists
     if (myChart) {
         myChart.destroy();
     }
@@ -136,8 +142,8 @@ function renderChart() {
             datasets: [{
                 data: [totals.instructional.toFixed(2), totals.nonInstructional.toFixed(2)],
                 backgroundColor: [
-                    '#007bff', // Blue for Instructional
-                    '#fd7e14' // Orange for Non-Instructional
+                    '#007bff', 
+                    '#fd7e14'  
                 ],
                 hoverOffset: 4
             }]
@@ -161,8 +167,8 @@ function renderChart() {
 function clearAllData() {
     if (confirm('Are you sure you want to clear ALL logged data? This cannot be undone.')) {
         localStorage.removeItem(STORAGE_KEY);
-        loadSessions();
+        loadSessions(); 
         updateSummary();
-        renderChart(); // Redraw chart with zero data
+        renderChart(); 
     }
 }
