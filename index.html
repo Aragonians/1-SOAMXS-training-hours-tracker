@@ -16,7 +16,23 @@
         <section id="tracker-form">
             <h2>Log New Session</h2>
             
-            <input type="text" id="instructor-name" placeholder="Instructor Name (e.g., John Doe)" required>
+            <select id="instructor-name" required>
+                <option value="" disabled selected>Select Instructor</option>
+                <option value="Aragon">Aragon</option>
+                <option value="Morrison">Morrison</option>
+                <option value="Howard">Howard</option>
+            </select>
+
+            <select id="class-taught" required>
+                <option value="" disabled selected>Select Class Taught</option>
+                <option value="MXR">MXR</option>
+                <option value="MXO">MXO</option>
+                <option value="CPR">CPR</option>
+                <option value="TCCC">TCCC</option>
+                <option value="MQTP">MQTP</option>
+                <option value="Commando">Commando</option>
+            </select>
+            
             <input type="date" id="session-date" required>
 
             <select id="session-type" required>
