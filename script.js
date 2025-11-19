@@ -1,21 +1,41 @@
-// Key for storing data in the browser's local storage
-const STORAGE_KEY = 'instructorHoursLogV5'; 
 let typeChart = null; 
 let instructorChart = null; 
 
-// Define the instructors array for easy iteration
 const INSTRUCTORS = ['Aragon', 'Morrison', 'Howard'];
+let currentSessions = []; // Global array to hold sessions fetched from the database
 
 // Load data and draw charts on page load
 document.addEventListener('DOMContentLoaded', () => {
-    loadSessions();
-    const totals = updateSummary();
-    renderTypeChart(totals); 
-    renderInstructorChart(totals);
+    // Start listening for real-time updates from Firebase
+    listenForSessions(); 
 });
 
-// Function to log a new session
-function logSession() {
+// NEW: Function to listen for real-time changes
+function listenForSessions() {
+    // This function subscribes to the database. Every time data changes, it updates the app.
+    db.collection(SESSION_COLLECTION).orderBy('timestamp', 'desc')
+        .onSnapshot((snapshot) => {
+            currentSessions = [];
+            snapshot.forEach(doc => {
+                // Ensure we handle the timestamp correctly and spread the data
+                const data = doc.data();
+                currentSessions.push(data);
+            });
+
+            // After fetching all documents, update the UI
+            loadSessions(currentSessions);
+            const totals = updateSummary(currentSessions);
+            renderTypeChart(totals); 
+            renderInstructorChart(totals);
+        }, error => {
+            console.error("Error listening to sessions: ", error);
+            // In a real app, you'd show a user-friendly error message here
+        });
+}
+
+
+// Function to log a new session (UPDATED TO USE FIREBASE)
+async function logSession() {
     const nameInput = document.getElementById('instructor-name');
     const classInput = document.getElementById('class-taught');
     const dateInput = document.getElementById('session-date');
@@ -34,56 +54,51 @@ function logSession() {
     const start = new Date(`${dateInput.value}T${startInput.value}`);
     const end = new Date(`${dateInput.value}T${endInput.value}`);
     
-    // Check if end time is before start time
     if (end <= start) {
         errorDisplay.textContent = 'End time must be after the start time.';
         errorDisplay.classList.remove('hidden');
         return;
     }
     
-    // Clear error message if validation passes
     errorDisplay.classList.add('hidden');
 
-    // Calculate duration in milliseconds and convert to hours
     const durationMs = end - start;
     const durationHours = durationMs / (1000 * 60 * 60);
 
-    const session = {
+    const sessionData = {
         name: nameInput.value,
         class: classInput.value,
         date: dateInput.value,
         type: typeInput.value,
         start: startInput.value,
         end: endInput.value,
-        duration: durationHours
+        duration: durationHours,
+        // Use a Firestore timestamp for reliable sorting across all devices
+        timestamp: firebase.firestore.FieldValue.serverTimestamp() 
     };
 
-    saveSession(session);
-    loadSessions(); 
-    const totals = updateSummary(); 
-    renderTypeChart(totals); 
-    renderInstructorChart(totals);
-    
-    dateInput.value = '';
-    typeInput.value = '';
-    startInput.value = '';
-    endInput.value = '';
+    try {
+        // This writes the data to the central database
+        await db.collection(SESSION_COLLECTION).add(sessionData);
+        
+        // Clearing inputs (UI updates handled by the 'listenForSessions' function)
+        dateInput.value = '';
+        typeInput.value = '';
+        startInput.value = '';
+        endInput.value = '';
+    } catch (error) {
+        console.error("Error adding document: ", error);
+        alert("Failed to log session to the database.");
+    }
 }
 
-// Function to save a session to Local Storage
-function saveSession(session) {
-    let sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    sessions.push(session);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-}
 
-// Function to load all sessions and render the log list
-function loadSessions() {
-    const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+// Function to load all sessions and render the log list (UPDATED to use fetched 'sessions')
+function loadSessions(sessions) {
     const logList = document.getElementById('log-list');
     logList.innerHTML = ''; 
 
-    sessions.reverse().forEach((session, index) => {
+    sessions.forEach((session) => {
         const listItem = document.createElement('li');
         const durationFormatted = session.duration.toFixed(2);
         
@@ -109,29 +124,24 @@ function loadSessions() {
     });
 }
 
-// Function to calculate and update the total hours summary (UPDATED)
-function updateSummary() {
-    const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+// Function to calculate and update the total hours summary (UPDATED to use fetched 'sessions')
+function updateSummary(sessions) {
     let totalInstructional = 0;
     let totalNonInstructional = 0;
     
-    // NEW STRUCTURE: Tracks instructional and non-instructional hours per instructor
     let instructorTotals = INSTRUCTORS.reduce((acc, name) => {
         acc[name] = { instructional: 0, nonInstructional: 0 };
         return acc;
     }, {});
     
     sessions.forEach(session => {
-        // Calculate Type Totals
         if (session.type === 'instructional') {
             totalInstructional += session.duration;
-            // Instructor Instructional Total
             if (instructorTotals.hasOwnProperty(session.name)) {
                 instructorTotals[session.name].instructional += session.duration;
             }
         } else if (session.type === 'non-instructional') {
             totalNonInstructional += session.duration;
-            // Instructor Non-Instructional Total
             if (instructorTotals.hasOwnProperty(session.name)) {
                 instructorTotals[session.name].nonInstructional += session.duration;
             }
@@ -148,7 +158,7 @@ function updateSummary() {
     };
 }
 
-// Function to render the total hours (Instructional vs Non-Instructional) as a Donut Chart
+// Function to render the total hours (Instructional vs Non-Instructional) as a Donut Chart (UNCHANGED)
 function renderTypeChart(totals) {
     const ctx = document.getElementById('typeHoursChart').getContext('2d');
 
@@ -184,11 +194,10 @@ function renderTypeChart(totals) {
     });
 }
 
-// NEW FUNCTION: Renders total hours per instructor as a STACKED Bar Chart
+// Renders total hours per instructor as a STACKED Bar Chart (UNCHANGED)
 function renderInstructorChart(totals) {
     const ctx = document.getElementById('instructorHoursChart').getContext('2d');
     
-    // Prepare data arrays
     const labels = INSTRUCTORS;
     const instructionalData = INSTRUCTORS.map(name => totals.instructor[name].instructional.toFixed(2));
     const nonInstructionalData = INSTRUCTORS.map(name => totals.instructor[name].nonInstructional.toFixed(2));
@@ -205,14 +214,14 @@ function renderInstructorChart(totals) {
                 {
                     label: 'Instructional Hours',
                     data: instructionalData,
-                    backgroundColor: '#007bff', // Blue
+                    backgroundColor: '#007bff', 
                     borderColor: '#007bff',
                     borderWidth: 1
                 },
                 {
                     label: 'Non-Instructional Hours',
                     data: nonInstructionalData,
-                    backgroundColor: '#fd7e14', // Orange
+                    backgroundColor: '#fd7e14', 
                     borderColor: '#fd7e14',
                     borderWidth: 1
                 }
@@ -220,7 +229,7 @@ function renderInstructorChart(totals) {
         },
         options: {
             responsive: true,
-            indexAxis: 'y', // Horizontal bar chart
+            indexAxis: 'y', 
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -232,27 +241,35 @@ function renderInstructorChart(totals) {
             },
             scales: {
                 x: {
-                    stacked: true, // Key to stacking bars
+                    stacked: true, 
                     title: {
                         display: true,
                         text: 'Total Hours'
                     }
                 },
                 y: {
-                    stacked: true // Key to stacking bars
+                    stacked: true 
                 }
             }
         }
     });
 }
 
-// Function to clear all data
-function clearAllData() {
-    if (confirm('Are you sure you want to clear ALL logged data? This cannot be undone.')) {
-        localStorage.removeItem(STORAGE_KEY);
-        loadSessions(); 
-        const totals = updateSummary();
-        renderTypeChart(totals); 
-        renderInstructorChart(totals); 
+// Function to clear all data (UPDATED to delete from FIREBASE)
+async function clearAllData() {
+    if (confirm('Are you sure you want to clear ALL logged data? This will clear the shared database for EVERYONE.')) {
+        try {
+            const batch = db.batch();
+            const snapshot = await db.collection(SESSION_COLLECTION).get();
+            snapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+            
+            // The listenForSessions function handles the UI update automatically
+        } catch (error) {
+            console.error("Error clearing documents: ", error);
+            alert("Failed to clear shared database.");
+        }
     }
 }
