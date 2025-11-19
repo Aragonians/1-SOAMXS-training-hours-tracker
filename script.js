@@ -1,5 +1,5 @@
 // Key for storing data in the browser's local storage
-const STORAGE_KEY = 'instructorHoursLogV5'; // Changed key again for fresh data compatibility
+const STORAGE_KEY = 'instructorHoursLogV5'; 
 let typeChart = null; 
 let instructorChart = null; 
 
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderInstructorChart(totals);
 });
 
-// Function to log a new session (UNCHANGED)
+// Function to log a new session
 function logSession() {
     const nameInput = document.getElementById('instructor-name');
     const classInput = document.getElementById('class-taught');
@@ -24,6 +24,7 @@ function logSession() {
     const endInput = document.getElementById('end-time');
     const errorDisplay = document.getElementById('error-message');
 
+    // Basic validation
     if (!nameInput.value || !classInput.value || !dateInput.value || !typeInput.value || !startInput.value || !endInput.value) {
         errorDisplay.textContent = 'Please select a value for all fields.';
         errorDisplay.classList.remove('hidden');
@@ -33,14 +34,17 @@ function logSession() {
     const start = new Date(`${dateInput.value}T${startInput.value}`);
     const end = new Date(`${dateInput.value}T${endInput.value}`);
     
+    // Check if end time is before start time
     if (end <= start) {
         errorDisplay.textContent = 'End time must be after the start time.';
         errorDisplay.classList.remove('hidden');
         return;
     }
     
+    // Clear error message if validation passes
     errorDisplay.classList.add('hidden');
 
+    // Calculate duration in milliseconds and convert to hours
     const durationMs = end - start;
     const durationHours = durationMs / (1000 * 60 * 60);
 
@@ -66,14 +70,14 @@ function logSession() {
     endInput.value = '';
 }
 
-// Function to save a session to Local Storage (UNCHANGED)
+// Function to save a session to Local Storage
 function saveSession(session) {
     let sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     sessions.push(session);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
 }
 
-// Function to load all sessions and render the log list (UNCHANGED)
+// Function to load all sessions and render the log list
 function loadSessions() {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const logList = document.getElementById('log-list');
@@ -144,7 +148,7 @@ function updateSummary() {
     };
 }
 
-// Function to render the total hours (Instructional vs Non-Instructional) as a Donut Chart (UNCHANGED)
+// Function to render the total hours (Instructional vs Non-Instructional) as a Donut Chart
 function renderTypeChart(totals) {
     const ctx = document.getElementById('typeHoursChart').getContext('2d');
 
@@ -192,7 +196,6 @@ function renderInstructorChart(totals) {
     if (instructorChart) {
         instructorChart.destroy();
     }
-    
 
     instructorChart = new Chart(ctx, {
         type: 'bar',
@@ -243,7 +246,7 @@ function renderInstructorChart(totals) {
     });
 }
 
-// Function to clear all data (UNCHANGED)
+// Function to clear all data
 function clearAllData() {
     if (confirm('Are you sure you want to clear ALL logged data? This cannot be undone.')) {
         localStorage.removeItem(STORAGE_KEY);
